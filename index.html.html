@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>GTA5 攻略战 · 洛圣都战术档案馆</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-abyss: #06090e;
+            --bg-deep: #0b1018;
+            --bg-surface: #111820;
+            --bg-card: #161e28;
+            --bg-card-hover: #1c2532;
+            --bg-input: #0d131b;
+            --border-ghost: #1a2330;
+            --border-subtle: #1f2a38;
+            --border-medium: #2a3748;
+            --border-active: #c9a44b;
+            --text-primary: #e8e0d3;
+            --text-secondary: #9ba3b2;
+            --text-muted: #586278;
+            --accent-gold: #c9a44b;
+            --accent-gold-light: #e0c878;
+            --accent-green: #3db88b;
+            --accent-green-glow: rgba(61, 184, 139, 0.3);
+            --accent-red: #d94f4f;
+            --accent-blue: #5b9bd5;
+            --accent-purple: #a78bfa;
+            --accent-orange: #e08b4b;
+            --accent-pink: #e87da0;
+            --accent-cyan: #4dd9c1;
+            --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+            --font-sans: 'Noto Sans SC', 'Inter', -apple-system, sans-serif;
+            --radius-xs: 0.3rem;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.8rem;
+            --radius-lg: 1.2rem;
+            --radius-xl: 1.6rem;
+            --radius-2xl: 2rem;
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-glow-gold: 0 0 30px rgba(201, 164, 75, 0.1);
+            --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-abyss);
+            background-image:
+                radial-gradient(ellipse at 30% 10%, rgba(201, 164, 75, 0.02) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 90%, rgba(61, 184, 139, 0.02) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 50%, rgba(91, 155, 213, 0.01) 0%, transparent 70%);
+            font-family: var(--font-sans);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        .global-nav {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-ghost);
+            padding: 0 1.2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            gap: 1rem;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            flex-shrink: 0;
+        }
+        .nav-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #1a301a, #0d1a0d);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1rem;
+            color: var(--accent-gold);
+            border: 1px solid rgba(201, 164, 75, 0.25);
+            font-family: var(--font-mono);
+            letter-spacing: 1px;
+        }
+        .nav-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        /* 语言切换按钮 */
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: 2rem;
+            padding: 0.25rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            flex-shrink: 0;
+        }
+        .lang-switch:hover {
+            border-color: var(--border-active);
+        }
+        .lang-option {
+            padding: 0.3rem 0.7rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            transition: var(--transition-fast);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .lang-option.active {
+            background: var(--accent-gold);
+            color: #0b1018;
+            box-shadow: 0 2px 8px rgba(201, 164, 75, 0.25);
+        }
+        .lang-option i {
+            margin-right: 0.15rem;
+            font-size: 0.6rem;
+        }
+        .nav-links {
+            display: flex;
+            gap: 0.2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .nav-link {
+            padding: 0.35rem 0.7rem;
+            border-radius: 2rem;
+            font-size: 0.73rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            transition: var(--transition-fast);
+            text-decoration: none;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border-color: var(--border-subtle);
+        }
+        .nav-link.active {
+            background: var(--accent-gold);
+            color: #0b1018;
+            border-color: var(--accent-gold);
+            font-weight: 700;
+            box-shadow: 0 2px 12px rgba(201, 164, 75, 0.2);
+        }
+        .nav-link i {
+            margin-right: 0.2rem;
+            font-size: 0.65rem;
+        }
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: 1px solid var(--border-medium);
+            color: var(--text-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1.1rem;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        @media (max-width: 900px) {
+            .nav-right {
+                flex-wrap: wrap;
+            }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 56px;
+                left: 0;
+                right: 0;
+                background: var(--bg-surface);
+                flex-direction: column;
+                padding: 0.5rem;
+                border-bottom: 1px solid var(--border-subtle);
+                gap: 0.2rem;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .mobile-menu-btn {
+                display: flex;
+            }
+            .nav-link {
+                padding: 0.55rem 0.9rem;
+                border-radius: var(--radius-md);
+                font-size: 0.8rem;
+            }
+        }
+
+        /* 主内容 */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .page {
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .page.active {
+            display: flex;
+        }
+
+        /* 首页 */
+        .hero-section {
+            background: var(--bg-surface);
+            border-radius: var(--radius-2xl);
+            padding: 2.2rem 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border-subtle);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), var(--accent-green), var(--accent-purple),
+                    transparent);
+            opacity: 0.6;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(201, 164, 75, 0.1);
+            border: 1px solid rgba(201, 164, 75, 0.2);
+            color: var(--accent-gold);
+            padding: 0.25rem 0.9rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
+        .hero-title {
+            font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+            font-weight: 900;
+            letter-spacing: 1px;
+            line-height: 1.2;
+            margin-bottom: 0.4rem;
+        }
+        .hero-title .gold {
+            color: var(--accent-gold);
+        }
+        .hero-title .green {
+            color: var(--accent-green);
+        }
+        .hero-sub {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            max-width: 550px;
+            margin: 0 auto 1.2rem;
+            letter-spacing: 0.3px;
+        }
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 0.8rem;
+        }
+        .hero-stat {
+            text-align: center;
+        }
+        .hero-stat .stat-num {
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+        }
+        .hero-stat .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.7rem;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.3rem 1.1rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card:hover {
+            border-color: var(--border-active);
+            background: var(--bg-card-hover);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-glow-gold), var(--shadow-card);
+        }
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-gold);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .feature-card:hover::after {
+            opacity: 0.7;
+        }
+        .feature-card .fc-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .feature-card .fc-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+        .feature-card .fc-desc {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            letter-spacing: 0.2px;
+            line-height: 1.5;
+        }
+
+        /* 搜索栏 */
+        .search-bar {
+            display: flex;
+            background: var(--bg-input);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-medium);
+            overflow: hidden;
+            transition: var(--transition-fast);
+            box-shadow: var(--shadow-card);
+        }
+        .search-bar:focus-within {
+            border-color: var(--border-active);
+            box-shadow: 0 0 0 4px rgba(201, 164, 75, 0.06), var(--shadow-card);
+        }
+        .search-bar .s-icon {
+            display: flex;
+            align-items: center;
+            padding-left: 1rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .search-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.75rem 0.7rem;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            outline: none;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            letter-spacing: 0.2px;
+        }
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+        .search-bar .s-btn {
+            background: var(--accent-gold);
+            border: none;
+            color: #0b1018;
+            font-weight: 700;
+            padding: 0.5rem 1.2rem;
+            margin: 0.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: var(--font-sans);
+            letter-spacing: 0.3px;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+        .search-bar .s-btn:hover {
+            background: var(--accent-gold-light);
+            box-shadow: 0 0 16px rgba(201, 164, 75, 0.25);
+        }
+
+        /* 标签 */
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+        .tag {
+            padding: 0.3rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.72rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border-medium);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            transition: var(--transition-fast);
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+        .tag:hover {
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+        .tag.active {
+            background: var(--accent-gold);
+            color: #0b1018;
+            border-color: var(--accent-gold);
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(201, 164, 75, 0.2);
+        }
+        .tag i {
+            margin-right: 0.2rem;
+            font-size: 0.6rem;
+        }
+
+        /* 双栏 */
+        .dual-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.7rem;
+        }
+        @media (max-width: 768px) {
+            .dual-layout {
+                grid-template-columns: 1fr;
+            }
+            .map-panel {
+                min-height: 280px;
+            }
+        }
+        .map-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 380px;
+            box-shadow: var(--shadow-card);
+        }
+        .map-header {
+            padding: 0.55rem 0.9rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--accent-green);
+            letter-spacing: 0.4px;
+            background: var(--bg-surface);
+        }
+        #map {
+            flex: 1;
+            width: 100%;
+            background: #0c1410;
+            z-index: 1;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #1c2532 !important;
+            color: #e8e0d3 !important;
+            border-radius: 0.7rem !important;
+            border: 1px solid #2a3748 !important;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7) !important;
+            font-family: var(--font-sans) !important;
+        }
+        .leaflet-popup-tip {
+            background: #1c2532 !important;
+            border: 1px solid #2a3748 !important;
+        }
+        .leaflet-popup-content {
+            margin: 0.5rem 0.7rem !important;
+            font-size: 0.75rem !important;
+            line-height: 1.5 !important;
+        }
+        .leaflet-popup-content strong {
+            color: #e0c878;
+            font-size: 0.85rem;
+        }
+        .popup-tag {
+            display: inline-block;
+            background: rgba(201, 164, 75, 0.12);
+            color: #c9a44b;
+            padding: 0.08rem 0.4rem;
+            border-radius: 0.2rem;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-right: 0.15rem;
+        }
+        .list-panel {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--border-subtle);
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            max-height: 440px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-card);
+        }
+        .list-panel::-webkit-scrollbar {
+            width: 3px;
+        }
+        .list-panel::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+        .list-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.55rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            border: 1px solid transparent;
+            font-size: 0.78rem;
+        }
+        .list-row:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-medium);
+        }
+        .list-row.active-row {
+            border-color: var(--accent-green);
+            background: rgba(61, 184, 139, 0.05);
+        }
+        .list-row .row-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: var(--radius-xs);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        .row-icon.type-money {
+            background: rgba(61, 184, 139, 0.1);
+            color: var(--accent-green);
+        }
+        .row-icon.type-collect {
+            background: rgba(167, 139, 250, 0.1);
+            color: var(--accent-purple);
+        }
+        .row-icon.type-vehicle {
+            background: rgba(91, 155, 213, 0.1);
+            color: var(--accent-blue);
+        }
+        .row-icon.type-mission {
+            background: rgba(201, 164, 75, 0.1);
+            color: var(--accent-gold);
+        }
+        .row-icon.type-property {
+            background: rgba(224, 139, 75, 0.1);
+            color: var(--accent-orange);
+        }
+        .row-icon.type-event {
+            background: rgba(232, 125, 160, 0.1);
+            color: var(--accent-pink);
+        }
+        .row-icon.type-fun {
+            background: rgba(77, 217, 193, 0.1);
+            color: var(--accent-cyan);
+        }
+        .row-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .row-info .row-title {
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .row-info .row-sub {
+            font-size: 0.64rem;
+            color: var(--text-muted);
+            margin-top: 0.03rem;
+        }
+        .row-coords {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            color: var(--accent-green);
+            font-weight: 500;
+            white-space: nowrap;
+            background: rgba(61, 184, 139, 0.05);
+            padding: 0.12rem 0.4rem;
+            border-radius: var(--radius-xs);
+        }
+
+        /* 进程导航 */
+        .timeline-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .phase-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.3rem 1.2rem;
+            transition: var(--transition-smooth);
+            cursor: pointer;
+            position: relative;
+        }
+        .phase-card:hover {
+            border-color: var(--border-active);
+            box-shadow: var(--shadow-glow-gold);
+        }
+        .phase-card .phase-number {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--accent-gold);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 0.2rem;
+        }
+        .phase-card .phase-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: 0.4px;
+            margin-bottom: 0.3rem;
+        }
+        .phase-card .phase-desc {
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            margin-bottom: 0.7rem;
+            letter-spacing: 0.2px;
+        }
+        .phase-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        .phase-step {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            padding: 0.35rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .phase-step i {
+            color: var(--accent-green);
+            font-size: 0.55rem;
+        }
+
+        /* 速查手册 */
+        .handbook-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0.7rem;
+        }
+        .handbook-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .handbook-card:hover {
+            border-color: var(--border-active);
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+        }
+        .handbook-card .hb-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .handbook-card .hb-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .handbook-card .hb-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+        }
+        .handbook-card .hb-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .handbook-card .hb-item {
+            background: var(--bg-surface);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2px;
+            border: 1px solid var(--border-ghost);
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+        .modal-box h3 {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.4px;
+        }
+        .modal-box .modal-type {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 0.3rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+        .modal-box .modal-desc {
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            line-height: 1.6;
+            margin-bottom: 0.6rem;
+        }
+        .modal-box .modal-detail {
+            background: var(--bg-surface);
+            padding: 0.6rem 0.8rem;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 0.8rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* 关于页 */
+        .about-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            border: 1px solid var(--border-subtle);
+            text-align: center;
+        }
+        .about-section h2 {
+            font-weight: 800;
+            font-size: 1.4rem;
+            margin-bottom: 0.7rem;
+        }
+        .about-section p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            max-width: 500px;
+            margin: 0 auto;
+            letter-spacing: 0.2px;
+            line-height: 1.7;
+        }
+        .site-footer {
+            text-align: center;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            border-top: 1px solid var(--border-ghost);
+            margin-top: 0.3rem;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 导航 ==================== -->
+    <nav class="global-nav">
+        <div class="nav-inner">
+            <a class="nav-brand" onclick="navigateTo('home')">
+                <div class="nav-logo">V</div>
+                <span class="nav-title" data-i18n="siteTitle">GTA5 攻略战</span>
+            </a>
+            <div class="nav-right">
+                <!-- 语言切换按钮 -->
+                <div class="lang-switch" id="langSwitch" title="Switch Language / 切换语言">
+                    <span class="lang-option active" data-lang="zh"><i class="fas fa-flag"></i> 中文</span>
+                    <span class="lang-option" data-lang="en"><i class="fas fa-globe"></i> EN</span>
+                </div>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+                <div class="nav-links" id="navLinks">
+                    <span class="nav-link active" data-page="home"><i class="fas fa-home"></i><span data-i18n="navHome">首页</span></span>
+                    <span class="nav-link" data-page="map"><i class="fas fa-map-marked-alt"></i><span data-i18n="navMap">战术地图</span></span>
+                    <span class="nav-link" data-page="timeline"><i class="fas fa-compass"></i><span data-i18n="navTimeline">进程导航</span></span>
+                    <span class="nav-link" data-page="handbook"><i class="fas fa-book"></i><span data-i18n="navHandbook">速查手册</span></span>
+                    <span class="nav-link" data-page="minigames"><i class="fas fa-gamepad"></i><span data-i18n="navMinigames">小任务&amp;玩法</span></span>
+                    <span class="nav-link" data-page="about"><i class="fas fa-info-circle"></i><span data-i18n="navAbout">关于</span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ==================== 主内容 ==================== -->
+    <div class="main-content">
+
+        <!-- 首页 -->
+        <div class="page active" id="page-home">
+            <section class="hero-section">
+                <div class="hero-badge" data-i18n="heroBadge">● Los Santos Tactical Archive</div>
+                <h1 class="hero-title">
+                    <span data-i18n="heroTitle1">洛圣都</span><span class="gold" data-i18n="heroTitle2">战术</span><span class="green" data-i18n="heroTitle3">档案馆</span>
+                </h1>
+                <p class="hero-sub" data-i18n="heroSub">从街头小混混到犯罪帝国首脑。地址集中管理 · 地图交互 · 进程导航 · 小任务全收录。</p>
+                <div class="hero-stats">
+                    <div class="hero-stat"><div class="stat-num">80+</div><div class="stat-label" data-i18n="statPoints">精准点位</div></div>
+                    <div class="hero-stat"><div class="stat-num">8</div><div class="stat-label" data-i18n="statCategories">核心类别</div></div>
+                    <div class="hero-stat"><div class="stat-num">30+</div><div class="stat-label" data-i18n="statMissions">小任务</div></div>
+                    <div class="hero-stat"><div class="stat-num">24/7</div><div class="stat-label" data-i18n="statUpdate">持续更新</div></div>
+                </div>
+            </section>
+            <div class="feature-grid">
+                <div class="feature-card" onclick="navigateTo('map')">
+                    <div class="fc-icon" style="color:var(--accent-green)"><i class="fas fa-map-marked-alt"></i></div>
+                    <div class="fc-title" data-i18n="fcMapTitle">战术地图</div>
+                    <div class="fc-desc" data-i18n="fcMapDesc">交互式地图，点击标记查看赚钱点、收集品、载具位置详情。</div>
+                </div>
+                <div class="feature-card" onclick="navigateTo('timeline')">
+                    <div class="fc-icon" style="color:var(--accent-blue)"><i class="fas fa-compass"></i></div>
+                    <div class="fc-title" data-i18n="fcTimelineTitle">进程导航</div>
+                    <div class="fc-desc" data-i18n="fcTimelineDesc">新手到毕业完整路线图，每个阶段该做什么一目了然。</div>
+                </div>
+                <div class="feature-card" onclick="navigateTo('handbook')">
+                    <div class="fc-icon" style="color:var(--accent-orange)"><i class="fas fa-bolt"></i></div>
+                    <div class="fc-title" data-i18n="fcHandbookTitle">速查手册</div>
+                    <div class="fc-desc" data-i18n="fcHandbookDesc">按类别快速查找：赚钱方法、收集品清单、载具获取、任务攻略。</div>
+                </div>
+                <div class="feature-card" onclick="navigateTo('minigames')">
+                    <div class="fc-icon" style="color:var(--accent-pink)"><i class="fas fa-gamepad"></i></div>
+                    <div class="fc-title" data-i18n="fcMiniTitle">小任务 & 玩法</div>
+                    <div class="fc-desc" data-i18n="fcMiniDesc">随机事件、休闲娱乐、彩蛋猎奇——洛圣都不止打打杀杀。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 战术地图页 -->
+        <div class="page" id="page-map">
+            <div class="search-bar">
+                <span class="s-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="mapSearchInput" data-i18n-placeholder="mapSearchPlaceholder" placeholder="搜索点位、任务、载具、收集品、随机事件...">
+                <button class="s-btn" id="mapSearchBtn"><i class="fas fa-crosshairs"></i><span data-i18n="mapSearchBtn">定位</span></button>
+            </div>
+            <div class="tag-row" id="mapTagRow">
+                <span class="tag active" data-filter="all"><i class="fas fa-globe-americas"></i><span data-i18n="tagAll">全部</span></span>
+                <span class="tag" data-filter="money"><i class="fas fa-coins"></i><span data-i18n="tagMoney">赚钱</span></span>
+                <span class="tag" data-filter="collect"><i class="fas fa-gem"></i><span data-i18n="tagCollect">收集品</span></span>
+                <span class="tag" data-filter="vehicle"><i class="fas fa-car-side"></i><span data-i18n="tagVehicle">载具</span></span>
+                <span class="tag" data-filter="mission"><i class="fas fa-flag-checkered"></i><span data-i18n="tagMission">任务</span></span>
+                <span class="tag" data-filter="property"><i class="fas fa-warehouse"></i><span data-i18n="tagProperty">资产</span></span>
+                <span class="tag" data-filter="event"><i class="fas fa-bolt"></i><span data-i18n="tagEvent">随机事件</span></span>
+                <span class="tag" data-filter="fun"><i class="fas fa-gamepad"></i><span data-i18n="tagFun">休闲玩法</span></span>
+            </div>
+            <div class="dual-layout">
+                <div class="map-panel">
+                    <div class="map-header"><i class="fas fa-circle" style="font-size:0.45rem;"></i><span data-i18n="mapHeader">洛圣都战术地图</span><span style="font-weight:400;font-size:0.65rem;color:var(--text-muted);margin-left:auto;" data-i18n="mapClickHint">点击标记查看</span></div>
+                    <div id="map"></div>
+                </div>
+                <div class="list-panel" id="mapLocationList">
+                    <div class="empty-state"><i class="fas fa-hand-pointer"></i> <span data-i18n="mapEmptyHint">点击地图标记或使用筛选查看点位</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 进程导航页 -->
+        <div class="page" id="page-timeline">
+            <div class="timeline-container" id="timelineContainer"></div>
+        </div>
+
+        <!-- 速查手册页 -->
+        <div class="page" id="page-handbook">
+            <div class="search-bar">
+                <span class="s-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="handbookSearchInput" data-i18n-placeholder="handbookSearchPlaceholder" placeholder="搜索攻略、方法、物品...">
+                <button class="s-btn" id="handbookSearchBtn"><i class="fas fa-search"></i><span data-i18n="handbookSearchBtn">查找</span></button>
+            </div>
+            <div class="handbook-grid" id="handbookGrid"></div>
+        </div>
+
+        <!-- 小任务&玩法页 -->
+        <div class="page" id="page-minigames">
+            <div class="search-bar">
+                <span class="s-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="miniSearchInput" data-i18n-placeholder="miniSearchPlaceholder" placeholder="搜索小任务、随机事件、休闲玩法...">
+                <button class="s-btn" id="miniSearchBtn"><i class="fas fa-search"></i><span data-i18n="miniSearchBtn">查找</span></button>
+            </div>
+            <div class="tag-row" id="miniTagRow">
+                <span class="tag active" data-filter="all"><i class="fas fa-th"></i><span data-i18n="miniTagAll">全部</span></span>
+                <span class="tag" data-filter="random"><i class="fas fa-bolt"></i><span data-i18n="miniTagRandom">随机事件</span></span>
+                <span class="tag" data-filter="side"><i class="fas fa-tasks"></i><span data-i18n="miniTagSide">支线任务</span></span>
+                <span class="tag" data-filter="sport"><i class="fas fa-futbol"></i><span data-i18n="miniTagSport">体育休闲</span></span>
+                <span class="tag" data-filter="collectible"><i class="fas fa-gem"></i><span data-i18n="miniTagCollectible">收集挑战</span></span>
+                <span class="tag" data-filter="easteregg"><i class="fas fa-egg"></i><span data-i18n="miniTagEaster">彩蛋猎奇</span></span>
+            </div>
+            <div class="handbook-grid" id="miniGrid"></div>
+        </div>
+
+        <!-- 关于页 -->
+        <div class="page" id="page-about">
+            <div class="about-section">
+                <h2 data-i18n="aboutTitle">关于 GTA5 攻略战</h2>
+                <p data-i18n="aboutDesc">这是一个为《侠盗猎车手5》玩家打造的战术档案馆。聚焦<span style="color:var(--accent-gold);">地址集中管理</span>、<span style="color:var(--accent-green);">交互式地图</span>、<span style="color:var(--accent-blue);">进程导航</span>、<span style="color:var(--accent-pink);">小任务全收录</span>四大核心，让每位洛圣都居民高效规划犯罪帝国。</p>
+                <p style="margin-top:0.8rem;font-size:0.75rem;" data-i18n="aboutVersion">版本 v4.0 · 80+点位 · 30+小任务 · 持续更新</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box" id="modalBox"></div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="site-footer" data-i18n="footer">▸ GTA5 攻略战 · 洛圣都战术档案馆 · 地址集中管理 · 地图交互 · 进程导航 · 小任务全收录 ◂</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        (function() {
+            // ==================== 国际化字典 ====================
+            const i18nDict = {
+                zh: {
+                    siteTitle: 'GTA5 攻略战',
+                    navHome: '首页',
+                    navMap: '战术地图',
+                    navTimeline: '进程导航',
+                    navHandbook: '速查手册',
+                    navMinigames: '小任务&玩法',
+                    navAbout: '关于',
+                    heroBadge: '● Los Santos Tactical Archive',
+                    heroTitle1: '洛圣都',
+                    heroTitle2: '战术',
+                    heroTitle3: '档案馆',
+                    heroSub: '从街头小混混到犯罪帝国首脑。地址集中管理 · 地图交互 · 进程导航 · 小任务全收录。',
+                    statPoints: '精准点位',
+                    statCategories: '核心类别',
+                    statMissions: '小任务',
+                    statUpdate: '持续更新',
+                    fcMapTitle: '战术地图',
+                    fcMapDesc: '交互式地图，点击标记查看赚钱点、收集品、载具位置详情。',
+                    fcTimelineTitle: '进程导航',
+                    fcTimelineDesc: '新手到毕业完整路线图，每个阶段该做什么一目了然。',
+                    fcHandbookTitle: '速查手册',
+                    fcHandbookDesc: '按类别快速查找：赚钱方法、收集品清单、载具获取、任务攻略。',
+                    fcMiniTitle: '小任务 & 玩法',
+                    fcMiniDesc: '随机事件、休闲娱乐、彩蛋猎奇——洛圣都不止打打杀杀。',
+                    mapSearchPlaceholder: '搜索点位、任务、载具、收集品、随机事件...',
+                    mapSearchBtn: '定位',
+                    tagAll: '全部',
+                    tagMoney: '赚钱',
+                    tagCollect: '收集品',
+                    tagVehicle: '载具',
+                    tagMission: '任务',
+                    tagProperty: '资产',
+                    tagEvent: '随机事件',
+                    tagFun: '休闲玩法',
+                    mapHeader: '洛圣都战术地图',
+                    mapClickHint: '点击标记查看',
+                    mapEmptyHint: '点击地图标记或使用筛选查看点位',
+                    handbookSearchPlaceholder: '搜索攻略、方法、物品...',
+                    handbookSearchBtn: '查找',
+                    miniSearchPlaceholder: '搜索小任务、随机事件、休闲玩法...',
+                    miniSearchBtn: '查找',
+                    miniTagAll: '全部',
+                    miniTagRandom: '随机事件',
+                    miniTagSide: '支线任务',
+                    miniTagSport: '体育休闲',
+                    miniTagCollectible: '收集挑战',
+                    miniTagEaster: '彩蛋猎奇',
+                    aboutTitle: '关于 GTA5 攻略战',
+                    aboutDesc: '这是一个为《侠盗猎车手5》玩家打造的战术档案馆。聚焦<span style="color:var(--accent-gold);">地址集中管理</span>、<span style="color:var(--accent-green);">交互式地图</span>、<span style="color:var(--accent-blue);">进程导航</span>、<span style="color:var(--accent-pink);">小任务全收录</span>四大核心，让每位洛圣都居民高效规划犯罪帝国。',
+                    aboutVersion: '版本 v4.0 · 80+点位 · 30+小任务 · 持续更新',
+                    footer: '▸ GTA5 攻略战 · 洛圣都战术档案馆 · 地址集中管理 · 地图交互 · 进程导航 · 小任务全收录 ◂',
+                    modalClose: '关闭',
+                    // 进程导航
+                    phase01Title: '🟢 新手起步期',
+                    phase01Desc: '完成序章后建立基础资金。优先积累第一桶金，避免不必要开销。',
+                    phase01Steps: ['联系任务刷钱', '西米恩车行交付', '购买高档公寓', '完成暗杀炒股', '抢劫便利店练手', '收集扑克牌入门'],
+                    phase02Title: '🔵 发展扩张期',
+                    phase02Desc: '购置核心产业，建立稳定被动收入。佩里科岛为主要收入引擎。',
+                    phase02Steps: ['购买办公室', '购买地堡', '解锁佩里科岛抢劫', '购买夜总会', '开始特种货物', '完成信号干扰器'],
+                    phase03Title: '🟡 资产完善期',
+                    phase03Desc: '补全产业链，解锁全部抢劫精英挑战。开始收集稀有载具。',
+                    phase03Steps: ['名钻赌场豪劫', '购买游戏厅', '全产业升级', '收集稀有载具', '完成电影道具', '挑战跳伞全点位'],
+                    phase04Title: '🟣 毕业封神期',
+                    phase04Desc: '全资产满配，全收集达成，精英挑战全通。享受洛圣都之王体验。',
+                    phase04Steps: ['全收集品达成', '全精英挑战', '稀有载具全收集', 'UFO彩蛋全触发', '海底探索全完成', '犯罪帝国完全体'],
+                    // 速查手册
+                    hbMoneyTitle: '赚钱攻略',
+                    hbCollectTitle: '收集品指南',
+                    hbVehicleTitle: '载具获取',
+                    hbMissionTitle: '任务攻略',
+                    hbPropertyTitle: '资产购买',
+                    hbEasterTitle: '隐藏彩蛋',
+                    hbMoneyItems: ['佩里科岛抢劫', '名钻赌场豪劫', '夜总会挂机', '西米恩车行', '暗杀炒股', '地堡出货', '特种货物', '载具出口'],
+                    hbCollectItems: ['扑克牌(54张)', '信号干扰器(50个)', 'UFO残骸', '电影道具(10个)', '迷幻仙人掌(27株)', '海军左轮', '双动左轮', '石斧挑战'],
+                    hbVehicleItems: ['天煞战斗机', '德罗索飞车', '火箭狂雷', '图拉尔多', 'MK2暴君', '蝙蝠车', '统治者', '方程式赛车'],
+                    hbMissionItems: ['莱斯特暗杀', 'FIB大厦', '联合储蓄银行', '越狱任务', '人道实验室', '末日豪劫', '太平洋标准差事'],
+                    hbPropertyItems: ['办公室', '地堡', '夜总会', '游戏厅', '摩托帮会所', '高档公寓', '特种货物仓库', '载具仓库'],
+                    hbEasterItems: ['UFO观测', '大脚怪', '幽灵车', '海底残骸', '荒野大镖客联动', '无限8号', '山顶女鬼'],
+                    // 小任务弹窗类型
+                    typeRandom: '随机事件',
+                    typeSide: '支线任务',
+                    typeSport: '体育休闲',
+                    typeCollectible: '收集挑战',
+                    typeEaster: '彩蛋猎奇',
+                },
+                en: {
+                    siteTitle: 'GTA5 Strategy Guide',
+                    navHome: 'Home',
+                    navMap: 'Tactical Map',
+                    navTimeline: 'Progression',
+                    navHandbook: 'Handbook',
+                    navMinigames: 'Missions & Fun',
+                    navAbout: 'About',
+                    heroBadge: '● Los Santos Tactical Archive',
+                    heroTitle1: 'Los Santos',
+                    heroTitle2: 'Tactical',
+                    heroTitle3: 'Archive',
+                    heroSub: 'From street thug to crime empire kingpin. Centralized locations · Interactive map · Progression guide · Complete mission catalog.',
+                    statPoints: 'Precision Points',
+                    statCategories: 'Core Categories',
+                    statMissions: 'Side Missions',
+                    statUpdate: 'Always Updated',
+                    fcMapTitle: 'Tactical Map',
+                    fcMapDesc: 'Interactive map with clickable markers for money spots, collectibles, and vehicle locations.',
+                    fcTimelineTitle: 'Progression Guide',
+                    fcTimelineDesc: 'Complete roadmap from beginner to endgame. Know exactly what to do at every stage.',
+                    fcHandbookTitle: 'Quick Handbook',
+                    fcHandbookDesc: 'Browse by category: money methods, collectible lists, vehicle acquisition, mission guides.',
+                    fcMiniTitle: 'Missions & Activities',
+                    fcMiniDesc: 'Random events, sports & leisure, Easter eggs — Los Santos is more than just shooting.',
+                    mapSearchPlaceholder: 'Search locations, missions, vehicles, collectibles, events...',
+                    mapSearchBtn: 'Locate',
+                    tagAll: 'All',
+                    tagMoney: 'Money',
+                    tagCollect: 'Collectibles',
+                    tagVehicle: 'Vehicles',
+                    tagMission: 'Missions',
+                    tagProperty: 'Properties',
+                    tagEvent: 'Events',
+                    tagFun: 'Activities',
+                    mapHeader: 'Los Santos Tactical Map',
+                    mapClickHint: 'Click markers for details',
+                    mapEmptyHint: 'Click map markers or use filters to view locations',
+                    handbookSearchPlaceholder: 'Search guides, methods, items...',
+                    handbookSearchBtn: 'Search',
+                    miniSearchPlaceholder: 'Search missions, events, activities...',
+                    miniSearchBtn: 'Search',
+                    miniTagAll: 'All',
+                    miniTagRandom: 'Random Events',
+                    miniTagSide: 'Side Missions',
+                    miniTagSport: 'Sports & Leisure',
+                    miniTagCollectible: 'Collectible Challenges',
+                    miniTagEaster: 'Easter Eggs',
+                    aboutTitle: 'About GTA5 Strategy Guide',
+                    aboutDesc: 'A tactical archive built for GTA5 players. Focused on <span style="color:var(--accent-gold);">centralized locations</span>, <span style="color:var(--accent-green);">interactive maps</span>, <span style="color:var(--accent-blue);">progression navigation</span>, and <span style="color:var(--accent-pink);">complete mission catalog</span>, empowering every Los Santos resident to efficiently build their criminal empire.',
+                    aboutVersion: 'Version v4.0 · 80+ Points · 30+ Missions · Continuously Updated',
+                    footer: '▸ GTA5 Strategy Guide · Los Santos Tactical Archive · Centralized Locations · Interactive Map · Progression Guide · Mission Catalog ◂',
+                    modalClose: 'Close',
+                    phase01Title: '🟢 Beginner Phase',
+                    phase01Desc: 'Build initial capital after the prologue. Prioritize your first big score and avoid unnecessary expenses.',
+                    phase01Steps: ['Contact missions', 'Simeon vehicle deliveries', 'Buy high-end apartment', 'Assassination stocks', 'Convenience store robberies', 'Start card collection'],
+                    phase02Title: '🔵 Expansion Phase',
+                    phase02Desc: 'Acquire core businesses and establish passive income. Cayo Perico becomes your main revenue engine.',
+                    phase02Steps: ['Buy office', 'Buy bunker', 'Unlock Cayo Perico', 'Buy nightclub', 'Start special cargo', 'Destroy signal jammers'],
+                    phase03Title: '🟡 Asset Completion',
+                    phase03Desc: 'Complete all business chains and unlock every heist elite challenge. Begin rare vehicle collection.',
+                    phase03Steps: ['Diamond Casino Heist', 'Buy arcade', 'Full business upgrades', 'Collect rare vehicles', 'Complete movie props', 'All parachute jumps'],
+                    phase04Title: '🟣 Endgame Mastery',
+                    phase04Desc: 'All assets maxed, all collectibles completed, all elite challenges cleared. Experience the ultimate kingpin life.',
+                    phase04Steps: ['All collectibles done', 'All elite challenges', 'All rare vehicles', 'All UFO sightings', 'Complete ocean exploration', 'Criminal empire complete'],
+                    hbMoneyTitle: 'Money Methods',
+                    hbCollectTitle: 'Collectibles Guide',
+                    hbVehicleTitle: 'Vehicle Acquisition',
+                    hbMissionTitle: 'Mission Guide',
+                    hbPropertyTitle: 'Property Purchase',
+                    hbEasterTitle: 'Hidden Easter Eggs',
+                    hbMoneyItems: ['Cayo Perico Heist', 'Diamond Casino Heist', 'Nightclub AFK', 'Simeon Deliveries', 'Stock Market', 'Bunker Sales', 'Special Cargo', 'Vehicle Export'],
+                    hbCollectItems: ['Playing Cards (54)', 'Signal Jammers (50)', 'UFO Wreckage', 'Movie Props (10)', 'Peyote Plants (27)', 'Navy Revolver', 'Double-Action Revolver', 'Stone Hatchet'],
+                    hbVehicleItems: ['P-996 Lazer', 'Deluxo', 'Scramjet', 'Toreador', 'Oppressor MK2', 'Batmobile', 'Dominator', 'Formula Car'],
+                    hbMissionItems: ['Lester Assassinations', 'FIB Raid', 'Union Depository', 'Prison Break', 'Humane Labs', 'Doomsday Heist', 'Pacific Standard'],
+                    hbPropertyItems: ['Office', 'Bunker', 'Nightclub', 'Arcade', 'MC Clubhouse', 'High-End Apartment', 'Cargo Warehouse', 'Vehicle Warehouse'],
+                    hbEasterItems: ['UFO Sightings', 'Bigfoot', 'Ghost Car', 'Underwater Wreckage', 'RDR2 Crossover', 'Infinity 8 Killer', 'Mount Gordo Ghost'],
+                    typeRandom: 'Random Event',
+                    typeSide: 'Side Mission',
+                    typeSport: 'Sports & Leisure',
+                    typeCollectible: 'Collectible Challenge',
+                    typeEaster: 'Easter Egg',
+                }
+            };
+
+            let currentLang = 'zh';
+
+            function setLanguage(lang) {
+                currentLang = lang;
+                document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+                // 更新语言按钮
+                document.querySelectorAll('.lang-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.getAttribute('data-lang') === lang);
+                });
+                // 更新所有带 data-i18n 的元素
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (i18nDict[lang] && i18nDict[lang][key]) {
+                        el.innerHTML = i18nDict[lang][key];
+                    }
+                });
+                // 更新 placeholder
+                document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                    const key = el.getAttribute('data-i18n-placeholder');
+                    if (i18nDict[lang] && i18nDict[lang][key]) {
+                        el.placeholder = i18nDict[lang][key];
+                    }
+                });
+                // 更新页面标题
+                document.title = i18nDict[lang].siteTitle;
+                // 重新渲染动态内容
+                renderTimeline();
+                renderHandbook();
+                renderMiniGames();
+                refreshMapView();
+            }
+
+            // 语言切换事件
+            document.getElementById('langSwitch').addEventListener('click', function(e) {
+                const opt = e.target.closest('.lang-option');
+                if (!opt) return;
+                const lang = opt.getAttribute('data-lang');
+                if (lang !== currentLang) setLanguage(lang);
+            });
+
+            // ==================== 全局导航 ====================
+            let currentPage = 'home';
+            const allPages = document.querySelectorAll('.page');
+            const allNavLinks = document.querySelectorAll('.nav-link');
+
+            function navigateTo(pageName) {
+                currentPage = pageName;
+                allPages.forEach(p => p.classList.remove('active'));
+                const tp = document.getElementById('page-' + pageName);
+                if (tp) tp.classList.add('active');
+                allNavLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-page') === pageName) link.classList.add('active');
+                });
+                document.getElementById('navLinks').classList.remove('open');
+                if (pageName === 'map') { setTimeout(() => { if (typeof map !== 'undefined' && map) map
+                        .invalidateSize();
+                        refreshMapView(); }, 200); }
+                if (pageName === 'handbook') renderHandbook();
+                if (pageName === 'minigames') renderMiniGames();
+                if (pageName === 'timeline') renderTimeline();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            allNavLinks.forEach(link => link.addEventListener('click', function() { navigateTo(this.getAttribute(
+                    'data-page')); }));
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() { document.getElementById(
+                    'navLinks').classList.toggle('open'); });
+            window.navigateTo = navigateTo;
+
+            // ==================== 弹窗 ====================
+            function openModal(title, type, desc, detail) {
+                const overlay = document.getElementById('modalOverlay');
+                const box = document.getElementById('modalBox');
+                const typeColors = {
+                    '赚钱': 'var(--accent-green)',
+                    'Money': 'var(--accent-green)',
+                    '收集品': 'var(--accent-purple)',
+                    'Collectibles': 'var(--accent-purple)',
+                    '载具': 'var(--accent-blue)',
+                    'Vehicles': 'var(--accent-blue)',
+                    '任务': 'var(--accent-gold)',
+                    'Missions': 'var(--accent-gold)',
+                    '资产': 'var(--accent-orange)',
+                    'Properties': 'var(--accent-orange)',
+                    '随机事件': 'var(--accent-pink)',
+                    'Random Event': 'var(--accent-pink)',
+                    '休闲': 'var(--accent-cyan)',
+                    '支线': 'var(--accent-blue)',
+                    'Side Mission': 'var(--accent-blue)',
+                    '体育': 'var(--accent-green)',
+                    'Sports': 'var(--accent-green)',
+                    '彩蛋': 'var(--accent-purple)',
+                    'Easter Egg': 'var(--accent-purple)',
+                    '挑战': 'var(--accent-orange)',
+                    'Challenge': 'var(--accent-orange)',
+                };
+                const c = typeColors[type] || 'var(--accent-gold)';
+                const closeText = i18nDict[currentLang].modalClose || '关闭';
+                box.innerHTML = `
+            <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">&times;</button>
+            <h3>${title}</h3>
+            <span class="modal-type" style="background:${c}20;color:${c};border:1px solid ${c}40">${type}</span>
+            <p class="modal-desc">${desc}</p>
+            <div class="modal-detail">${detail}</div>
+          `;
+                overlay.classList.add('open');
+            }
+            document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) this
+                    .classList.remove('open'); });
+            window.openModal = openModal;
+
+            // ==================== 数据 ====================
+            const locations = [
+                { id: 1, nameZh: '佩里科岛抢劫入口', nameEn: 'Cayo Perico Entry', type: 'money', icon: 'fa-water',
+                    iconClass: 'type-money', lat: 30.3, lng: -90.1, descZh: '潜艇入口·单人上岛',
+                    descEn: 'Submarine entry · Solo best route', detailZh: '收益:150-200万/次',
+                    detailEn: 'Reward: 1.5-2M per run', coords: 'Submarine Point' },
+                { id: 2, nameZh: '名钻赌场豪劫', nameEn: 'Diamond Casino Heist', type: 'money', icon: 'fa-gem',
+                    iconClass: 'type-money', lat: 33.8, lng: -118.3, descZh: '隐匿路线入口',
+                    descEn: 'Silent & Sneaky entry', detailZh: '收益:180-250万/次',
+                    detailEn: 'Reward: 1.8-2.5M per run', coords: 'Diamond Casino' },
+                { id: 3, nameZh: '夜总会仓库', nameEn: 'Nightclub Warehouse', type: 'property', icon: 'fa-music',
+                    iconClass: 'type-property', lat: 34.0, lng: -118.5, descZh: '挂机被动收入',
+                    descEn: 'AFK passive income', detailZh: '日入约8万', detailEn: '~80K daily', coords: 'Downtown' },
+                { id: 4, nameZh: '西米恩车行', nameEn: 'Simeon\'s Dealership', type: 'money', icon: 'fa-car',
+                    iconClass: 'type-money', lat: 34.1, lng: -118.7, descZh: '偷车交付刷钱',
+                    descEn: 'Steal & deliver for cash', detailZh: '每小时10-15万', detailEn: '100-150K per hour',
+                    coords: 'West Vinewood' },
+                { id: 5, nameZh: '地堡生产基地', nameEn: 'Bunker Production', type: 'property', icon: 'fa-industry',
+                    iconClass: 'type-property', lat: 33.6, lng: -118.9, descZh: '研究/制造双模式',
+                    descEn: 'Research & Manufacturing', detailZh: '满仓约100万', detailEn: '~1M full stock',
+                coords: 'Chumash' },
+                { id: 10, nameZh: '扑克牌 #1', nameEn: 'Playing Card #1', type: 'collect', icon: 'fa-clover',
+                    iconClass: 'type-collect', lat: 34.3, lng: -118.9, descZh: '好麦坞山木屋',
+                    descEn: 'Vinewood Hills cabin', detailZh: '共54张', detailEn: '54 total', coords: 'Vinewood Hills' },
+                { id: 11, nameZh: '信号干扰器 #1', nameEn: 'Signal Jammer #1', type: 'collect',
+                    icon: 'fa-broadcast-tower', iconClass: 'type-collect', lat: 33.5, lng: -117.8, descZh: '机场塔台',
+                    descEn: 'Airport control tower', detailZh: '共50个', detailEn: '50 total', coords: 'LSIA' },
+                { id: 12, nameZh: 'UFO残骸', nameEn: 'UFO Wreckage', type: 'collect', icon: 'fa-ufo',
+                    iconClass: 'type-collect', lat: 35.0, lng: -119.2, descZh: '沙滩海岸北部',
+                    descEn: 'North Paleto Bay', detailZh: '线下彩蛋', detailEn: 'Story mode easter egg',
+                    coords: 'Paleto Bay' },
+                { id: 20, nameZh: '天煞战斗机', nameEn: 'P-996 Lazer', type: 'vehicle', icon: 'fa-fighter-jet',
+                    iconClass: 'type-vehicle', lat: 33.2, lng: -117.5, descZh: '军事基地机库',
+                    descEn: 'Fort Zancudo hangar', detailZh: '需3星通缉', detailEn: '3-star wanted level',
+                    coords: 'Fort Zancudo' },
+                { id: 21, nameZh: '德罗索飞车', nameEn: 'Deluxo', type: 'vehicle', icon: 'fa-rocket',
+                    iconClass: 'type-vehicle', lat: 34.2, lng: -118.1, descZh: '特殊载具仓库',
+                    descEn: 'Special vehicle warehouse', detailZh: '批发价需前置', detailEn: 'Trade price needs prep',
+                    coords: 'Downtown Garage' },
+                { id: 30, nameZh: '莱斯特暗杀任务', nameEn: 'Lester Assassinations', type: 'mission', icon: 'fa-skull',
+                    iconClass: 'type-mission', lat: 34.05, lng: -118.25, descZh: '线下炒股关键',
+                    descEn: 'Stock market key', detailZh: '贝塔制药/水果电脑', detailEn: 'Betta/Fruit Computers',
+                    coords: 'Lester\'s House' },
+                { id: 40, nameZh: '装甲车抢劫', nameEn: 'Armored Truck Robbery', type: 'event', icon: 'fa-truck',
+                    iconClass: 'type-event', lat: 34.04, lng: -118.35, descZh: '地图随机刷装甲运钞车',
+                    descEn: 'Random armored truck spawn', detailZh: '粘弹炸后门·收益3-8万',
+                    detailEn: 'Sticky bomb rear door · 30-80K', coords: 'Random Spawn' },
+                { id: 50, nameZh: '高尔夫球场', nameEn: 'Golf Course', type: 'fun', icon: 'fa-golf-ball',
+                    iconClass: 'type-fun', lat: 34.05, lng: -118.45, descZh: '完整9洞高尔夫',
+                    descEn: 'Full 9-hole course', detailZh: '可单人或多人', detailEn: 'Solo or multiplayer',
+                    coords: 'Vinewood Golf' },
+            ];
+
+            // 小任务数据
+            const miniGameData = [
+                { titleZh: '装甲车抢劫', titleEn: 'Armored Truck Robbery', type: 'random', icon: 'fa-truck',
+                    color: 'var(--accent-pink)', descZh: '地图上随机刷新的装甲运钞车，用粘弹炸开后门获取现金。',
+                    descEn: 'Randomly spawning armored trucks. Use sticky bombs on the rear door to get cash.',
+                    detailZh: '📍全图随机刷新 | 💰收益:3-8万 | ⚠️触发3星通缉 | 💡建议:用粘弹炸后门，副驾驶门也可爆破',
+                    detailEn: '📍Random spawn | 💰Reward: 30-80K | ⚠️Triggers 3-star wanted | 💡Tip: Blow rear door with sticky bombs'
+                },
+                { titleZh: '商店抢劫', titleEn: 'Store Robbery', type: 'random', icon: 'fa-store',
+                    color: 'var(--accent-pink)', descZh: '进入任意24/7便利店，掏枪威胁店员交出现金。',
+                    descEn: 'Enter any 24/7 store and threaten the clerk for cash.',
+                    detailZh: '📍全图便利店 | 💰收益:1000-3000 | ⚠️触发2星通缉 | 💡可连续抢劫多家',
+                    detailEn: '📍All convenience stores | 💰Reward: 1K-3K | ⚠️2-star wanted | 💡Can rob multiple stores'
+                },
+                { titleZh: '帮派攻击', titleEn: 'Gang Attack', type: 'random', icon: 'fa-fist-raised',
+                    color: 'var(--accent-pink)', descZh: '地图上红色圆圈区域，清理盘踞的帮派成员。',
+                    descEn: 'Red circle areas on the map. Clear out gang members.',
+                    detailZh: '📍帮派区域随机 | 💰收益:RP+现金 | ⚠️敌人较多 | 💡建议开车碾压或远距离狙杀',
+                    detailEn: '📍Random gang areas | 💰Reward: RP+Cash | ⚠️Many enemies | 💡Use vehicle or sniper'
+                },
+                { titleZh: '高尔夫', titleEn: 'Golf', type: 'sport', icon: 'fa-golf-ball', color: 'var(--accent-green)',
+                    descZh: '完整9洞高尔夫球场，可单人练习或与朋友对战。',
+                    descEn: 'Full 9-hole golf course. Play solo or against friends.',
+                    detailZh: '📍好麦坞高尔夫俱乐部 | 🏆提升力量属性 | 💡低于标准杆获成就',
+                    detailEn: '📍Vinewood Golf Club | 🏆Increases Strength | 💡Under par earns achievement' },
+                { titleZh: '网球', titleEn: 'Tennis', type: 'sport', icon: 'fa-table-tennis',
+                    color: 'var(--accent-green)', descZh: '在多个网球场与NPC或在线玩家对战。',
+                    descEn: 'Play against NPCs or online players at various courts.',
+                    detailZh: '📍多处场地 | 🏆提升力量 | 💡赢得比赛解锁服装',
+                    detailEn: '📍Multiple courts | 🏆Increases Strength | 💡Win matches to unlock outfits' },
+                { titleZh: '飞镖', titleEn: 'Darts', type: 'sport', icon: 'fa-dart', color: 'var(--accent-green)',
+                    descZh: '在蓝调酒吧挑战飞镖301分制。', descEn: 'Challenge darts 301 at the Blue Room bar.',
+                    detailZh: '📍蓝调酒吧 | 🏆击败所有对手 | 💡瞄准三倍20分区',
+                    detailEn: '📍Blue Room Bar | 🏆Beat all opponents | 💡Aim for triple 20' },
+                { titleZh: '街头赛车', titleEn: 'Street Racing', type: 'sport', icon: 'fa-flag-checkered',
+                    color: 'var(--accent-green)', descZh: '线上模式街头赛车系列，多种车型可选。',
+                    descEn: 'Online street racing series with multiple vehicle classes.',
+                    detailZh: '📍洛圣都车友会 | 💰丰厚奖励 | 🏆解锁特殊载具改装',
+                    detailEn: '📍LS Car Meet | 💰Rich rewards | 🏆Unlock special modifications' },
+                { titleZh: '跳伞', titleEn: 'Parachuting', type: 'sport', icon: 'fa-parachute-box',
+                    color: 'var(--accent-green)', descZh: '搭乘直升机从高空跳伞，完成所有跳伞点挑战。',
+                    descEn: 'Skydive from helicopters and complete all jump points.',
+                    detailZh: '📍多处跳伞点 | 🏆完成全部获奖励 | 💡精准着陆获额外RP',
+                    detailEn: '📍Multiple jump points | 🏆Complete all for reward | 💡Precise landing gives extra RP' },
+                { titleZh: '海底探索', titleEn: 'Ocean Exploration', type: 'sport', icon: 'fa-water',
+                    color: 'var(--accent-green)', descZh: '潜水探索太平洋海底的沉船残骸与隐藏物品。',
+                    descEn: 'Dive to explore shipwrecks and hidden items on the ocean floor.',
+                    detailZh: '📍太平洋沿岸 | 🏆发现隐藏物品 | 💡需潜水装备或潜艇',
+                    detailEn: '📍Pacific coast | 🏆Discover hidden items | 💡Need scuba gear or submarine' },
+                { titleZh: '扑克牌收集', titleEn: 'Playing Card Collection', type: 'collectible', icon: 'fa-clover',
+                    color: 'var(--accent-purple)', descZh: '全图54张扑克牌收集，完成后获得特殊奖励。',
+                    descEn: 'Collect all 54 playing cards across the map for special rewards.',
+                    detailZh: '📍全图分布 | 🏆特殊服装+RP | 💡建议使用直升机按区域搜索',
+                    detailEn: '📍Map-wide | 🏆Special outfit+RP | 💡Use helicopter to search by region' },
+                { titleZh: '信号干扰器', titleEn: 'Signal Jammers', type: 'collectible', icon: 'fa-broadcast-tower',
+                    color: 'var(--accent-purple)', descZh: '摧毁50个信号干扰器，解锁线上专家奖励。',
+                    descEn: 'Destroy 50 signal jammers to unlock expert rewards.',
+                    detailZh: '📍全图分布 | 🏆大量RP+现金 | 💡多数在高楼顶部·需飞行载具',
+                    detailEn: '📍Map-wide | 🏆Massive RP+Cash | 💡Most on rooftops · Need aircraft' },
+                { titleZh: 'UFO观测', titleEn: 'UFO Sightings', type: 'easteregg', icon: 'fa-ufo',
+                    color: 'var(--accent-red)', descZh: '在特定时间地点观测UFO飞碟出现。',
+                    descEn: 'Observe UFO appearances at specific times and locations.',
+                    detailZh: '📍多处固定位置 | ⏰凌晨3-4点 | 💡需线下100%完成度',
+                    detailEn: '📍Fixed locations | ⏰3-4 AM | 💡Need 100% completion' },
+                { titleZh: '大脚怪', titleEn: 'Bigfoot', type: 'easteregg', icon: 'fa-paw', color: 'var(--accent-red)',
+                    descZh: '在森林区域寻找大脚怪的踪迹。', descEn: 'Search for Bigfoot tracks in forest areas.',
+                    detailZh: '📍奇力耶德山森林 | ⏰特定天气 | 💡完成迷幻仙人掌后解锁',
+                    detailEn: '📍Mt. Chiliad forest | ⏰Specific weather | 💡Unlock after peyote plants' },
+                { titleZh: '幽灵车', titleEn: 'Ghost Car', type: 'easteregg', icon: 'fa-ghost',
+                    color: 'var(--accent-red)', descZh: '在特定地点发现无人驾驶的幽灵车辆。',
+                    descEn: 'Discover driverless ghost vehicles at specific locations.',
+                    detailZh: '📍沙滩海岸 | ⏰夜晚出现 | 💡靠近后会消失',
+                    detailEn: '📍Paleto Bay | ⏰Night spawn | 💡Disappears when approached' },
+                { titleZh: '荒野大镖客联动', titleEn: 'Red Dead Crossover', type: 'easteregg', icon: 'fa-hat-cowboy',
+                    color: 'var(--accent-red)', descZh: '寻找与RDR2联动的隐藏内容：金块与左轮手枪。',
+                    descEn: 'Find RDR2 crossover content: gold bars and revolvers.',
+                    detailZh: '📍全图多处 | 🏆双动左轮手枪 | 💡在线搜索具体攻略',
+                    detailEn: '📍Multiple locations | 🏆Double-Action Revolver | 💡Search online for details' },
+                { titleZh: '无限8号杀手', titleEn: 'Infinity 8 Killer', type: 'easteregg', icon: 'fa-infinity',
+                    color: 'var(--accent-red)', descZh: '追踪无限8号连环杀手的秘密。',
+                    descEn: 'Track the secrets of the Infinity 8 serial killer.',
+                    detailZh: '📍沙滩海岸 | 🏆独特剧情 | 💡收集所有纸条拼凑真相',
+                    detailEn: '📍Paleto Bay | 🏆Unique story | 💡Collect all notes to piece together the truth' },
+            ];
+
+            // 获取翻译后的名称
+            function locName(loc) { return currentLang === 'zh' ? loc.nameZh : loc.nameEn; }
+
+            function locDesc(loc) { return currentLang === 'zh' ? loc.descZh : loc.descEn; }
+
+            function locDetail(loc) { return currentLang === 'zh' ? loc.detailZh : loc.detailEn; }
+
+            function miniTitle(m) { return currentLang === 'zh' ? m.titleZh : m.titleEn; }
+
+            function miniDesc(m) { return currentLang === 'zh' ? m.descZh : m.descEn; }
+
+            function miniDetail(m) { return currentLang === 'zh' ? m.detailZh : m.detailEn; }
+
+            // ==================== 地图逻辑 ====================
+            let map, markersGroup, markerList = [];
+            let activeRowId = null;
+
+            function initMap() {
+                if (map) return;
+                const mapEl = document.getElementById('map');
+                if (!mapEl || mapEl.clientHeight === 0) return;
+                map = L.map('map', { center: [34.05, -118.25], zoom: 9, zoomControl: false,
+                attributionControl: false });
+                L.control.zoom({ position: 'bottomright' }).addTo(map);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(
+                    map);
+                markersGroup = L.layerGroup().addTo(map);
+                refreshMapView();
+            }
+
+            function markerIcon(type) {
+                const palette = { money: '#3db88b', collect: '#a78bfa', vehicle: '#5b9bd5', mission: '#c9a44b',
+                    property: '#e08b4b', event: '#e87da0', fun: '#4dd9c1' };
+                const c = palette[type] || '#c9a44b';
+                return L.divIcon({ className: 'custom-div-icon',
+                    html: `<div style="width:16px;height:16px;background:${c};border-radius:4px;border:2px solid #e8e0d3;box-shadow:0 0 12px ${c};transform:rotate(45deg);cursor:pointer;"></div>`,
+                    iconSize: [16, 16], iconAnchor: [8, 8], popupAnchor: [0, -9] });
+            }
+
+            function renderMarkers(filtered) {
+                if (!markersGroup) return;
+                markersGroup.clearLayers();
+                markerList = [];
+                filtered.forEach(loc => {
+                    const typeLabel = currentLang === 'zh' ?
+                        { money: '赚钱', collect: '收集品', vehicle: '载具', mission: '任务', property: '资产',
+                            event: '随机事件', fun: '休闲' } [loc.type] || loc.type :
+                        { money: 'Money', collect: 'Collectible', vehicle: 'Vehicle', mission: 'Mission',
+                            property: 'Property', event: 'Event', fun: 'Activity' } [loc.type] || loc.type;
+                    const m = L.marker([loc.lat, loc.lng], { icon: markerIcon(loc.type) }).bindPopup(`
+            <strong>${locName(loc)}</strong><br><span class="popup-tag">${typeLabel}</span> ${locDesc(loc)}<br>
+            <small style="color:#9ba3b2;">${locDetail(loc)} · ${loc.coords}</small>
+          `);
+                    m._locData = loc;
+                    m.on('click', () => highlightRow(loc.id));
+                    markersGroup.addLayer(m);
+                    markerList.push(m);
+                });
+                if (filtered.length > 0 && filtered.length < locations.length) {
+                    const bounds = filtered.map(l => [l.lat, l.lng]);
+                    map.fitBounds(bounds, { padding: [25, 25], maxZoom: 12 });
+                } else if (filtered.length === locations.length && map) { map.setView([34.05, -118.25], 9); }
+            }
+
+            function renderList(filtered) {
+                const lp = document.getElementById('mapLocationList');
+                if (!lp) return;
+                if (filtered.length === 0) {
+                    lp.innerHTML =
+                        `<div class="empty-state"><i class="fas fa-search"></i> ${currentLang==='zh'?'无匹配点位':'No matching locations'}</div>`;
+                    return;
+                }
+                lp.innerHTML = filtered.map(loc => `
+            <div class="list-row ${loc.id===activeRowId?'active-row':''}" data-lid="${loc.id}">
+              <div class="row-icon ${loc.iconClass}"><i class="fas ${loc.icon}"></i></div>
+              <div class="row-info"><div class="row-title">${locName(loc)}</div><div class="row-sub">${locDetail(loc)}</div></div>
+              <div class="row-coords">${loc.coords}</div>
+            </div>`).join('');
+                lp.querySelectorAll('.list-row').forEach(row => row.addEventListener('click', function() { flyToLocation(
+                        parseInt(this.getAttribute('data-lid'))); }));
+            }
+
+            function highlightRow(lid) { activeRowId = lid;
+                refreshMapView(); }
+
+            function flyToLocation(lid) {
+                const loc = locations.find(l => l.id === lid);
+                if (!loc || !map) return;
+                map.flyTo([loc.lat, loc.lng], 13, { duration: 0.7 });
+                markerList.forEach(m => { if (m._locData && m._locData.id === lid) m.openPopup(); });
+                highlightRow(lid);
+            }
+
+            function getMapFilter() {
+                const at = document.querySelector('#mapTagRow .tag.active');
+                const filter = at ? at.getAttribute('data-filter') : 'all';
+                const term = (document.getElementById('mapSearchInput')?.value || '').trim().toLowerCase();
+                return locations.filter(loc => {
+                    if (filter !== 'all' && loc.type !== filter) return false;
+                    if (term) { const s = term; if (!locName(loc).toLowerCase().includes(s) && !locDesc(loc)
+                            .toLowerCase().includes(s) && !locDetail(loc).toLowerCase().includes(s) && !
+                            loc.type.toLowerCase().includes(s)) return false; }
+                    return true;
+                });
+            }
+
+            function refreshMapView() {
+                if (!map) { initMap(); return; }
+                const f = getMapFilter();
+                renderMarkers(f);
+                renderList(f);
+            }
+
+            function bindMapEvents() {
+                const tr = document.getElementById('mapTagRow');
+                if (tr && !tr._bound) { tr._bound = true;
+                    tr.addEventListener('click', e => { const tag = e.target.closest('.tag'); if (!tag) return;
+                            tr.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                            tag.classList.add('active');
+                            activeRowId = null;
+                            refreshMapView(); }); }
+                const sb = document.getElementById('mapSearchBtn'),
+                    si = document.getElementById('mapSearchInput');
+                if (sb && !sb._bound) { sb._bound = true;
+                    sb.addEventListener('click', () => { activeRowId = null;
+                        refreshMapView(); }); }
+                if (si && !si._bound) { si._bound = true;
+                    si.addEventListener('keypress', e => { if (e.key === 'Enter') { activeRowId = null;
+                            refreshMapView(); } }); let t;
+                    si.addEventListener('input', () => { clearTimeout(t);
+                        t = setTimeout(() => { activeRowId = null;
+                            refreshMapView(); }, 300); }); }
+            }
+
+            // ==================== 速查手册 ====================
+            function renderHandbook(st = '') {
+                const grid = document.getElementById('handbookGrid');
+                if (!grid) return;
+                const dict = i18nDict[currentLang];
+                const handbookData = [
+                    { title: dict.hbMoneyTitle, icon: 'fa-coins', color: 'var(--accent-green)',
+                        items: dict.hbMoneyItems },
+                    { title: dict.hbCollectTitle, icon: 'fa-gem', color: 'var(--accent-purple)',
+                        items: dict.hbCollectItems },
+                    { title: dict.hbVehicleTitle, icon: 'fa-car-side', color: 'var(--accent-blue)',
+                        items: dict.hbVehicleItems },
+                    { title: dict.hbMissionTitle, icon: 'fa-flag-checkered', color: 'var(--accent-gold)',
+                        items: dict.hbMissionItems },
+                    { title: dict.hbPropertyTitle, icon: 'fa-warehouse', color: 'var(--accent-orange)',
+                        items: dict.hbPropertyItems },
+                    { title: dict.hbEasterTitle, icon: 'fa-ufo', color: 'var(--accent-red)',
+                    items: dict.hbEasterItems },
+                ];
+                let data = handbookData;
+                if (st) { const t = st.toLowerCase();
+                    data = handbookData.filter(c => c.title.toLowerCase().includes(t) || c.items.some(i => i
+                        .toLowerCase().includes(t))); }
+                const noMatch = currentLang === 'zh' ? '未找到匹配' : 'No matches found';
+                grid.innerHTML = data.length === 0 ?
+                    `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-search"></i>${noMatch}</div>` :
+                    data.map(c => `
+            <div class="handbook-card" onclick="openModal('${c.title}','${currentLang==='zh'?'攻略分类':'Guide Category'}','${c.items.join('、')}','📋 ${currentLang==='zh'?'点击地图页查看具体点位坐标':'Click map page for coordinates'}')">
+              <div class="hb-header"><div class="hb-icon" style="color:${c.color}"><i class="fas ${c.icon}"></i></div><div class="hb-title">${c.title}</div></div>
+              <div class="hb-items">${c.items.map(i=>`<span class="hb-item">${i}</span>`).join('')}</div>
+            </div>`).join('');
+            }
+
+            function bindHandbookEvents() {
+                const sb = document.getElementById('handbookSearchBtn'),
+                    si = document.getElementById('handbookSearchInput');
+                if (sb && !sb._bound) { sb._bound = true;
+                    sb.addEventListener('click', () => renderHandbook(si?.value || '')); }
+                if (si && !si._bound) { si._bound = true;
+                    si.addEventListener('keypress', e => { if (e.key === 'Enter') renderHandbook(si.value); }); let t;
+                    si.addEventListener('input', () => { clearTimeout(t);
+                        t = setTimeout(() => renderHandbook(si.value), 300); }); }
+            }
+
+            // ==================== 小任务页 ====================
+            function renderMiniGames(st = '', filter = 'all') {
+                const grid = document.getElementById('miniGrid');
+                if (!grid) return;
+                let data = miniGameData;
+                if (filter !== 'all') data = data.filter(m => m.type === filter);
+                if (st) { const t = st.toLowerCase();
+                    data = data.filter(m => miniTitle(m).toLowerCase().includes(t) || miniDesc(m).toLowerCase()
+                        .includes(t) || miniDetail(m).toLowerCase().includes(t)); }
+                const typeMap = {
+                    random: currentLang === 'zh' ? '随机事件' : 'Random Event',
+                    side: currentLang === 'zh' ? '支线任务' : 'Side Mission',
+                    sport: currentLang === 'zh' ? '体育休闲' : 'Sports & Leisure',
+                    collectible: currentLang === 'zh' ? '收集挑战' : 'Collectible Challenge',
+                    easteregg: currentLang === 'zh' ? '彩蛋猎奇' : 'Easter Egg',
+                };
+                const noMatch = currentLang === 'zh' ? '未找到匹配' : 'No matches found';
+                grid.innerHTML = data.length === 0 ?
+                    `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-search"></i>${noMatch}</div>` :
+                    data.map(m => {
+                        const typeLabel = typeMap[m.type] || m.type;
+                        return `
+            <div class="handbook-card" onclick="openModal('${miniTitle(m)}','${typeLabel}','${miniDesc(m)}','${miniDetail(m).replace(/'/g,"\\'")}')">
+              <div class="hb-header"><div class="hb-icon" style="color:${m.color}"><i class="fas ${m.icon}"></i></div><div class="hb-title">${miniTitle(m)}</div></div>
+              <p style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;">${miniDesc(m).substring(0,50)}...</p>
+            </div>`;
+                    }).join('');
+            }
+
+            function bindMiniEvents() {
+                const tr = document.getElementById('miniTagRow');
+                if (tr && !tr._bound) { tr._bound = true;
+                    tr.addEventListener('click', e => { const tag = e.target.closest('.tag'); if (!tag) return;
+                            tr.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                            tag.classList.add('active');
+                            renderMiniGames(document.getElementById('miniSearchInput')?.value || '', tag
+                                .getAttribute('data-filter')); }); }
+                const sb = document.getElementById('miniSearchBtn'),
+                    si = document.getElementById('miniSearchInput');
+                if (sb && !sb._bound) { sb._bound = true;
+                    sb.addEventListener('click', () => { const f = document.querySelector(
+                            '#miniTagRow .tag.active')?.getAttribute('data-filter') || 'all';
+                        renderMiniGames(si?.value || '', f); }); }
+                if (si && !si._bound) { si._bound = true;
+                    si.addEventListener('keypress', e => { if (e.key === 'Enter') { const f = document.querySelector(
+                                '#miniTagRow .tag.active')?.getAttribute('data-filter') || 'all';
+                            renderMiniGames(si.value, f); } }); let t;
+                    si.addEventListener('input', () => { clearTimeout(t);
+                        t = setTimeout(() => { const f = document.querySelector(
+                                '#miniTagRow .tag.active')?.getAttribute('data-filter') || 'all';
+                            renderMiniGames(si.value, f); }, 300); }); }
+            }
+
+            // ==================== 进程导航 ====================
+            function renderTimeline() {
+                const container = document.getElementById('timelineContainer');
+                if (!container) return;
+                const dict = i18nDict[currentLang];
+                const timelineData = [
+                    { num: 'Phase 01', title: dict.phase01Title, desc: dict.phase01Desc,
+                        steps: dict.phase01Steps },
+                    { num: 'Phase 02', title: dict.phase02Title, desc: dict.phase02Desc,
+                        steps: dict.phase02Steps },
+                    { num: 'Phase 03', title: dict.phase03Title, desc: dict.phase03Desc,
+                        steps: dict.phase03Steps },
+                    { num: 'Phase 04', title: dict.phase04Title, desc: dict.phase04Desc,
+                        steps: dict.phase04Steps },
+                ];
+                container.innerHTML = timelineData.map(p => `
+            <div class="phase-card">
+              <div class="phase-number">${p.num}</div>
+              <div class="phase-title">${p.title}</div>
+              <div class="phase-desc">${p.desc}</div>
+              <div class="phase-steps">${p.steps.map(s=>`<span class="phase-step"><i class="fas fa-check-circle"></i>${s}</span>`).join('')}</div>
+            </div>`).join('');
+            }
+
+            // ==================== 初始化 ====================
+            function init() {
+                bindMapEvents();
+                bindHandbookEvents();
+                bindMiniEvents();
+                renderHandbook();
+                renderMiniGames();
+                renderTimeline();
+                navigateTo('home');
+            }
+            const origNav = navigateTo;
+            navigateTo = function(pn) {
+                origNav(pn);
+                if (pn === 'map') { setTimeout(() => { initMap();
+                        refreshMapView(); }, 150); }
+                if (pn === 'handbook') renderHandbook();
+                if (pn === 'minigames') renderMiniGames();
+                if (pn === 'timeline') renderTimeline();
+            };
+            window.navigateTo = navigateTo;
+            init();
+        })();
+    </script>
+</body>
+</html>
